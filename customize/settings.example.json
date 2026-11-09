@@ -1,0 +1,9 @@
+{
+  "wallpaper": "C:\\Users\\Public\\Pictures\\Sample Wallpaper\\img0.jpg",
+  "theme": "dark",
+  "defaultBrowser": "Mozilla.Firefox",
+  "taskbarAlignLeft": true,
+  "showFileExtensions": true,
+  "disableWidgets": true,
+  "notes": "Skopiuj do settings.json i dostosuj. settings.json nie trafia do repozytorium."
+}

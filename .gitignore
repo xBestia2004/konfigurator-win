@@ -1,0 +1,34 @@
+# lokalne konfiguracje
+customize/settings.json
+install/apps.json
+
+# obrazy i pliki instalacyjne
+*.iso
+*.esd
+*.wim
+*.cab
+downloads/
+output/
+images/
+
+# logi i tymczasowe
+*.log
+*.tmp
+logs/
+Temp/
+tmp/
+
+# edytory i system
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# PowerShell
+*.ps1xml.bak
+
+# Lokalna instrukcja publikacji
+INSTRUKCJA.md

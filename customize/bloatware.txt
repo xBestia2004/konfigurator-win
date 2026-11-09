@@ -1,0 +1,34 @@
+# Lista nazw pakietów Appx do usunięcia (Get-AppxPackage -Name ...)
+# Linie zaczynające się od # są ignorowane.
+# Dostosuj do siebie przed realnym uruchomieniem.
+
+Microsoft.BingNews
+Microsoft.BingWeather
+Microsoft.BingSearch
+Microsoft.GetHelp
+Microsoft.Getstarted
+Microsoft.MicrosoftOfficeHub
+Microsoft.MicrosoftSolitaireCollection
+Microsoft.MicrosoftStickyNotes
+Microsoft.People
+Microsoft.WindowsFeedbackHub
+Microsoft.WindowsMaps
+Microsoft.Xbox.TCUI
+Microsoft.XboxApp
+Microsoft.XboxGameOverlay
+Microsoft.XboxGamingOverlay
+Microsoft.XboxIdentityProvider
+Microsoft.XboxSpeechToTextOverlay
+Microsoft.GamingApp
+Microsoft.ZuneMusic
+Microsoft.ZuneVideo
+Microsoft.YourPhone
+Microsoft.Todos
+Microsoft.PowerAutomateDesktop
+Microsoft.Microsoft3DViewer
+Microsoft.MixedReality.Portal
+Clipchamp.Clipchamp
+Microsoft.OutlookForWindows
+MicrosoftTeams
+Microsoft.Windows.DevHome
+Microsoft.WindowsCommunicationsApps

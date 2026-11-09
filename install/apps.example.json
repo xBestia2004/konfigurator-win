@@ -1,0 +1,10 @@
+{
+  "apps": [
+    { "id": "Mozilla.Firefox", "name": "Firefox" },
+    { "id": "7zip.7zip", "name": "7-Zip" },
+    { "id": "VideoLAN.VLC", "name": "VLC" },
+    { "id": "Notepad++.Notepad++", "name": "Notepad++" },
+    { "id": "Git.Git", "name": "Git" }
+  ],
+  "notes": "Skopiuj do apps.json i dostosuj listę. apps.json nie trafia do repozytorium."
+}
