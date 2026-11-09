@@ -4,6 +4,7 @@
 
 .DESCRIPTION
   Domyślnie tryb podglądu (-DryRun). Wymaga winget przy realnej instalacji.
+  Opcjonalnie -AppIds ogranicza instalację do wybranych identyfikatorów (kreator GUI).
 #>
 [CmdletBinding()]
 param(
@@ -14,13 +15,15 @@ param(
     [string]$ExampleAppsPath = (Join-Path $PSScriptRoot 'apps.example.json'),
 
     [Parameter(Mandatory = $false)]
-    [switch]$DryRun = $true
+    [switch]$DryRun = $true,
+
+    [Parameter(Mandatory = $false)]
+    [string[]]$AppIds = @()
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Jeśli ktoś poda -DryRun:$false, to jest tryb wykonawczy
 if ($PSBoundParameters.ContainsKey('DryRun') -and -not $DryRun) {
     $script:IsDryRun = $false
 }
@@ -80,34 +83,54 @@ function Install-WingetApp {
     }
 }
 
-Write-Host "=== Install-Apps ==="
-if ($script:IsDryRun) {
-    Write-Host "Tryb podglądu (DryRun). Nic nie zostanie zainstalowane."
-}
+function Invoke-InstallAppsMain {
+    param(
+        [string]$AppsPath,
+        [string]$ExampleAppsPath,
+        [string[]]$AppIds
+    )
 
-if (-not (Test-WingetAvailable)) {
+    Write-Host "=== Install-Apps ==="
     if ($script:IsDryRun) {
-        Write-Warning "winget nie jest dostępny w PATH. W podglądzie kontynuuję; przy realnej instalacji będzie wymagany."
+        Write-Host "Tryb podglądu (DryRun). Nic nie zostanie zainstalowane."
+    }
+
+    if (-not (Test-WingetAvailable)) {
+        if ($script:IsDryRun) {
+            Write-Warning "winget nie jest dostępny w PATH. W podglądzie kontynuuję; przy realnej instalacji będzie wymagany."
+        }
+        else {
+            throw "winget nie jest dostępny. Zainstaluj App Installer (Microsoft Store) i spróbuj ponownie."
+        }
     }
     else {
-        throw "winget nie jest dostępny. Zainstaluj App Installer (Microsoft Store) i spróbuj ponownie."
+        Write-Host "winget: znaleziony"
     }
-}
-else {
-    Write-Host "winget: znaleziony"
-}
 
-$apps = Get-AppList -Path $AppsPath -ExamplePath $ExampleAppsPath
-Write-Host "Aplikacji na liście: $($apps.Count)"
+    $apps = Get-AppList -Path $AppsPath -ExamplePath $ExampleAppsPath
 
-foreach ($app in $apps) {
-    $id = [string]$app.id
-    $name = [string]$app.name
-    if (-not $id) {
-        Write-Warning "Pomijam wpis bez id: $($app | ConvertTo-Json -Compress)"
-        continue
+    if ($AppIds -and $AppIds.Count -gt 0) {
+        $idSet = @{}
+        foreach ($id in $AppIds) { $idSet[[string]$id] = $true }
+        $apps = @($apps | Where-Object { $idSet.ContainsKey([string]$_.id) })
+        Write-Host "Filtrowanie AppIds: $($apps.Count) pozycji"
     }
-    Install-WingetApp -Id $id -Name $name
+
+    Write-Host "Aplikacji na liście: $($apps.Count)"
+
+    foreach ($app in $apps) {
+        $id = [string]$app.id
+        $name = [string]$app.name
+        if (-not $id) {
+            Write-Warning "Pomijam wpis bez id: $($app | ConvertTo-Json -Compress)"
+            continue
+        }
+        Install-WingetApp -Id $id -Name $name
+    }
+
+    Write-Host "Install-Apps: koniec."
 }
 
-Write-Host "Install-Apps: koniec."
+if ($MyInvocation.InvocationName -ne '.') {
+    Invoke-InstallAppsMain -AppsPath $AppsPath -ExampleAppsPath $ExampleAppsPath -AppIds $AppIds
+}

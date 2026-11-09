@@ -15,14 +15,33 @@ Na razie to tylko szkielet. Skrypty mają tryb podglądu (domyślnie nic nie zmi
 
 Dariusz Kisiel, technik informatyk, Lublin
 
+## Kreator graficzny
+
+Na Windows możesz przejść przez kroki w oknie kreatora (Windows Forms).
+
+Uruchomienie (najlepiej jako administrator):
+
+- dwuklik `Kreator.cmd`, albo
+- w PowerShell:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -STA -File .\gui\Start-Kreator.ps1
+```
+
+Kreator pokazuje wykrytą edycję Windows, sprawdza uprawnienia administratora i obecność winget, a potem prowadzi przez pobranie informacji o obrazie, dostosowanie i instalację aplikacji. Domyślnie zaznaczony jest **Tryb próbny (bez zmian w systemie)**. W trybie próbnym nic nie jest usuwane ani instalowane, tylko logowane. Odznaczenie trybu próbnego przekazuje pracę do istniejących skryptów w trybie wykonawczym.
+
 ## Struktura
 
 ```
 konfigurator-win/
-  bootstrap.ps1              # uruchamia kolejne kroki
+  Kreator.cmd                # szybkie uruchomienie kreatora (STA)
+  bootstrap.ps1              # uruchamia kolejne kroki (konsola)
   README.md
+  BACKLOG.md                 # planowane funkcje
   LICENSE
   .gitignore
+  gui/
+    Start-Kreator.ps1        # kreator graficzny (Windows Forms)
   download/
     Get-WindowsImage.ps1     # pobieranie obrazu (szkielet)
   customize/
@@ -35,20 +54,30 @@ konfigurator-win/
     apps.example.json        # przykład listy aplikacji
 ```
 
+## Inspiracja
+
+Pomysł na ten projekt wziął się z narzędzia [WinUtil od Chris Titus Tech](https://github.com/ChrisTitusTech/winutil). Dziękuję autorowi za jego pracę.
+
+konfigurator-win próbuje pójść o krok dalej. W planach jest zapis gotowego obrazu Windows z tą samą konfiguracją na bootowalny pendrive oraz możliwość uruchomienia narzędzia z Windows, Linuksa i macOS. Te funkcje nie są jeszcze gotowe. Dziś dostosowanie systemu i instalacja programów działają na Windows, a szczegóły planów są w pliku `BACKLOG.md`.
+
+## Plany
+
+Planowane funkcje (m.in. bootowalny pendrive) są opisane w pliku `BACKLOG.md`.
+
 ## Wymagania
 
 - Windows 10 lub Windows 11
-- PowerShell 5.1 lub PowerShell 7
+- PowerShell 5.1 lub PowerShell 7 (kreator GUI: 5.1+ w trybie STA)
 - Uprawnienia administratora do realnych zmian (usuwanie Appx, winget, część ustawień)
 - winget (App Installer z Microsoft Store), gdy chcesz instalować programy
 
 ## Bezpieczeństwo
 
-Najpierw uruchom skrypty w maszynie wirtualnej albo na kopii zapasowej. Domyślnie działa tryb podglądu (`-WhatIf` / dry-run): skrypt tylko wypisuje, co by zrobił. Dopiero jawne `-WhatIf:$false` (albo `-DryRun:$false` tam, gdzie jest ten przełącznik) wykonuje zmiany.
+Najpierw uruchom skrypty w maszynie wirtualnej albo na kopii zapasowej. Domyślnie działa tryb podglądu (`-WhatIf` / dry-run / tryb próbny w kreatorze): skrypt tylko wypisuje, co by zrobił. Dopiero jawne `-WhatIf:$false` (albo `-DryRun:$false`, albo odznaczenie trybu próbnego w GUI) wykonuje zmiany.
 
 Obrazy Windows pobieraj wyłącznie ze stron Microsoft. Ten projekt nie wskazuje nieoficjalnych mirrorów.
 
-## Przykład użycia
+## Przykład użycia (konsola)
 
 W PowerShell uruchomionym jako administrator, w katalogu projektu:
 

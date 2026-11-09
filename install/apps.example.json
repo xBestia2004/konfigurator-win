@@ -1,10 +1,13 @@
 {
+  "description": "Lista programów instalowanych automatycznie przez winget. Skopiuj jako apps.json, aby dostosować pod siebie.",
   "apps": [
-    { "id": "Mozilla.Firefox", "name": "Firefox" },
-    { "id": "7zip.7zip", "name": "7-Zip" },
-    { "id": "VideoLAN.VLC", "name": "VLC" },
-    { "id": "Notepad++.Notepad++", "name": "Notepad++" },
-    { "id": "Git.Git", "name": "Git" }
-  ],
-  "notes": "Skopiuj do apps.json i dostosuj listę. apps.json nie trafia do repozytorium."
+    { "id": "Mozilla.Firefox", "name": "Mozilla Firefox", "category": "Przeglądarki" },
+    { "id": "7zip.7zip", "name": "7-Zip", "category": "Narzędzia" },
+    { "id": "VideoLAN.VLC", "name": "VLC Media Player", "category": "Multimedia" },
+    { "id": "Notepad++.Notepad++", "name": "Notepad++", "category": "Edytory" },
+    { "id": "Microsoft.VisualStudioCode", "name": "Visual Studio Code", "category": "Programowanie" },
+    { "id": "Git.Git", "name": "Git for Windows", "category": "Programowanie" },
+    { "id": "Microsoft.PowerToys", "name": "Microsoft PowerToys", "category": "Narzędzia" },
+    { "id": "Microsoft.WindowsTerminal", "name": "Windows Terminal", "category": "Narzędzia" }
+  ]
 }

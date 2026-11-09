@@ -1,18 +1,46 @@
-# Lista nazw pakietów Appx do usunięcia (Get-AppxPackage -Name ...)
-# Linie zaczynające się od # są ignorowane.
-# Dostosuj do siebie przed realnym uruchomieniem.
+# ====================================================================
+# konfigurator-win: Lista zbędnych pakietów Appx (Bloatware List)
+# ====================================================================
+# Linie rozpoczynające się od '#' są traktowane jako komentarze.
+# Odkomentuj lub zakomentuj wybrane pozycje wedle własnych preferencji.
+# ====================================================================
 
+# --- Wiadomości, Finanse i Pogoda (Bing) ---
 Microsoft.BingNews
 Microsoft.BingWeather
+Microsoft.BingFinance
+Microsoft.BingSports
 Microsoft.BingSearch
+
+# --- Narzędzia promocyjne i powiadomienia ---
 Microsoft.GetHelp
 Microsoft.Getstarted
-Microsoft.MicrosoftOfficeHub
-Microsoft.MicrosoftSolitaireCollection
-Microsoft.MicrosoftStickyNotes
-Microsoft.People
 Microsoft.WindowsFeedbackHub
+Microsoft.MicrosoftSolitaireCollection
+Microsoft.People
 Microsoft.WindowsMaps
+Microsoft.Microsoft3DViewer
+Microsoft.MixedReality.Portal
+Clipchamp.Clipchamp
+Microsoft.549981C3F5F10
+
+# --- Narzędzia biurowe i chmurowe (OEM / Web Promos) ---
+Microsoft.MicrosoftOfficeHub
+Microsoft.OutlookForWindows
+MicrosoftTeams
+Microsoft.Todos
+Microsoft.PowerAutomateDesktop
+Microsoft.Windows.DevHome
+Microsoft.SkypeApp
+
+# --- Multimedia (Zastępowane przez np. VLC / MPC-HC) ---
+Microsoft.ZuneMusic
+Microsoft.ZuneVideo
+
+# --- Synchronizacja ze smartfonem (opcjonalne - zakomentuj jeśli używasz) ---
+Microsoft.YourPhone
+
+# --- Pakiety Xbox / Gaming (zakomentuj jeśli grasz w gry z Xbox Game Pass) ---
 Microsoft.Xbox.TCUI
 Microsoft.XboxApp
 Microsoft.XboxGameOverlay
@@ -20,15 +48,3 @@ Microsoft.XboxGamingOverlay
 Microsoft.XboxIdentityProvider
 Microsoft.XboxSpeechToTextOverlay
 Microsoft.GamingApp
-Microsoft.ZuneMusic
-Microsoft.ZuneVideo
-Microsoft.YourPhone
-Microsoft.Todos
-Microsoft.PowerAutomateDesktop
-Microsoft.Microsoft3DViewer
-Microsoft.MixedReality.Portal
-Clipchamp.Clipchamp
-Microsoft.OutlookForWindows
-MicrosoftTeams
-Microsoft.Windows.DevHome
-Microsoft.WindowsCommunicationsApps

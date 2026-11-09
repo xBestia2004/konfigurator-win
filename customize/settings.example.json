@@ -1,9 +1,13 @@
 {
-  "wallpaper": "C:\\Users\\Public\\Pictures\\Sample Wallpaper\\img0.jpg",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Windows Customization Settings",
+  "description": "Konfiguracja wyglądu i zachowania systemu Windows. Skopiuj ten plik jako settings.json i dostosuj według uznania.",
   "theme": "dark",
-  "defaultBrowser": "Mozilla.Firefox",
   "taskbarAlignLeft": true,
   "showFileExtensions": true,
+  "showHiddenFiles": true,
   "disableWidgets": true,
-  "notes": "Skopiuj do settings.json i dostosuj. settings.json nie trafia do repozytorium."
+  "disableBingSearch": true,
+  "disableTelemetry": true,
+  "wallpaper": "C:\\Windows\\Web\\Wallpaper\\Windows\\img0.jpg"
 }

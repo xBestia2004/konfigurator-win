@@ -1,8 +1,8 @@
-# lokalne konfiguracje
+# User Configuration (Local overrides)
 customize/settings.json
 install/apps.json
 
-# obrazy i pliki instalacyjne
+# Windows disk images & media
 *.iso
 *.esd
 *.wim
@@ -11,14 +11,14 @@ downloads/
 output/
 images/
 
-# logi i tymczasowe
+# Logs and runtime temporary files
 *.log
 *.tmp
 logs/
 Temp/
 tmp/
 
-# edytory i system
+# IDEs & System files
 .vscode/
 .idea/
 *.swp
@@ -27,8 +27,5 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
-# PowerShell
+# PowerShell temporary artifacts
 *.ps1xml.bak
-
-# Lokalna instrukcja publikacji
-INSTRUKCJA.md

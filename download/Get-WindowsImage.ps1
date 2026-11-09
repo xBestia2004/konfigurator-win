@@ -72,9 +72,23 @@ function Start-WindowsImageDownload {
     return $null
 }
 
-$officialUrl = Get-OfficialDownloadPage -Version $Version
-Show-IntendedFlow -Version $Version -Edition $Edition -OfficialUrl $officialUrl -OutputDirectory $OutputDirectory
-Start-WindowsImageDownload -Version $Version -Edition $Edition -OutputDirectory $OutputDirectory | Out-Null
+function Invoke-GetWindowsImage {
+    param(
+        [ValidateSet('10', '11')]
+        [string]$Version = '11',
+        [ValidateSet('Home', 'Pro')]
+        [string]$Edition = 'Pro',
+        [string]$OutputDirectory = (Join-Path $PSScriptRoot '..\downloads')
+    )
 
-Write-Host ""
-Write-Host "Gotowe (tryb informacyjny). Otwórz oficjalny URL w przeglądarce, gdy będziesz gotowy do pobrania."
+    $officialUrl = Get-OfficialDownloadPage -Version $Version
+    Show-IntendedFlow -Version $Version -Edition $Edition -OfficialUrl $officialUrl -OutputDirectory $OutputDirectory
+    Start-WindowsImageDownload -Version $Version -Edition $Edition -OutputDirectory $OutputDirectory | Out-Null
+    Write-Host ""
+    Write-Host "Gotowe (tryb informacyjny). Otwórz oficjalny URL w przeglądarce, gdy będziesz gotowy do pobrania."
+    return $officialUrl
+}
+
+if ($MyInvocation.InvocationName -ne '.') {
+    Invoke-GetWindowsImage -Version $Version -Edition $Edition -OutputDirectory $OutputDirectory
+}

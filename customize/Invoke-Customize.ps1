@@ -5,6 +5,7 @@
 .DESCRIPTION
   Domyślnie działa w trybie podglądu (-WhatIf). Usuwanie Appx następuje
   tylko gdy -WhatIf:$false. Tapeta, motyw i domyślna przeglądarka: TODO.
+  Opcjonalnie -PackageNames ogranicza listę do wybranych pakietów (kreator GUI).
 #>
 [CmdletBinding(SupportsShouldProcess = $true, ConfirmImpact = 'Medium')]
 param(
@@ -15,13 +16,15 @@ param(
     [string]$BloatwareListPath = (Join-Path $PSScriptRoot 'bloatware.txt'),
 
     [Parameter(Mandatory = $false)]
-    [string]$ExampleSettingsPath = (Join-Path $PSScriptRoot 'settings.example.json')
+    [string]$ExampleSettingsPath = (Join-Path $PSScriptRoot 'settings.example.json'),
+
+    [Parameter(Mandatory = $false)]
+    [string[]]$PackageNames = @()
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Domyślnie WhatIf, gdy użytkownik nie podał przełącznika
 if (-not $PSBoundParameters.ContainsKey('WhatIf')) {
     $WhatIfPreference = $true
 }
@@ -72,12 +75,15 @@ function Remove-BloatwareAppx {
 
         foreach ($pkg in $packages) {
             $target = "$($pkg.Name) ($($pkg.PackageFullName))"
-            if ($WhatIfPreference -or -not $PSCmdlet.ShouldProcess($target, 'Remove-AppxPackage')) {
+            $doWhatIf = $WhatIfPreference
+            if (-not $doWhatIf -and $null -ne $PSCmdlet) {
+                $doWhatIf = -not $PSCmdlet.ShouldProcess($target, 'Remove-AppxPackage')
+            }
+            if ($doWhatIf) {
                 Write-Host "[WhatIf] Usunięto by Appx: $target"
                 continue
             }
 
-            # Realne usunięcie tylko poza trybem podglądu
             Remove-AppxPackage -Package $pkg.PackageFullName -ErrorAction Stop
             Write-Host "[ok] Usunięto: $target"
         }
@@ -102,23 +108,48 @@ function Set-DefaultBrowserSetting {
     Write-Host "[TODO] Domyślna przeglądarka: $($Settings.defaultBrowser)"
 }
 
-Write-Host "=== Invoke-Customize ==="
-if ($WhatIfPreference) {
-    Write-Host "Tryb podglądu (WhatIf). Żadne Appx nie zostaną usunięte."
+function Invoke-CustomizeMain {
+    param(
+        [string]$SettingsPath,
+        [string]$BloatwareListPath,
+        [string]$ExampleSettingsPath,
+        [string[]]$PackageNames
+    )
+
+    Write-Host "=== Invoke-Customize ==="
+    if ($WhatIfPreference) {
+        Write-Host "Tryb podglądu (WhatIf). Żadne Appx nie zostaną usunięte."
+    }
+    else {
+        Write-Host "Tryb wykonawczy. Appx z listy mogą zostać usunięte."
+    }
+
+    $settings = Get-CustomizationSettings -Path $SettingsPath -ExamplePath $ExampleSettingsPath
+
+    if ($PackageNames -and $PackageNames.Count -gt 0) {
+        $bloat = @($PackageNames)
+        Write-Host "Lista pakietów: przekazana z zewnątrz ($($bloat.Count))"
+    }
+    else {
+        $bloat = @(Get-BloatwareNames -Path $BloatwareListPath)
+        Write-Host "Lista pakietów z: $BloatwareListPath ($($bloat.Count))"
+    }
+
+    $settingsUsed = $ExampleSettingsPath
+    if (Test-Path -LiteralPath $SettingsPath) {
+        $settingsUsed = $SettingsPath
+    }
+    Write-Host "Ustawienia z: $settingsUsed"
+    Write-Host "Pozycji bloatware na liście: $($bloat.Count)"
+
+    Remove-BloatwareAppx -PackageNames $bloat
+    Set-WallpaperSetting -Settings $settings
+    Set-ThemeSetting -Settings $settings
+    Set-DefaultBrowserSetting -Settings $settings
+
+    Write-Host "Customize: koniec."
 }
-else {
-    Write-Host "Tryb wykonawczy. Appx z listy mogą zostać usunięte."
+
+if ($MyInvocation.InvocationName -ne '.') {
+    Invoke-CustomizeMain -SettingsPath $SettingsPath -BloatwareListPath $BloatwareListPath -ExampleSettingsPath $ExampleSettingsPath -PackageNames $PackageNames
 }
-
-$settings = Get-CustomizationSettings -Path $SettingsPath -ExamplePath $ExampleSettingsPath
-$bloat = @(Get-BloatwareNames -Path $BloatwareListPath)
-
-Write-Host "Ustawienia z: $(if (Test-Path $SettingsPath) { $SettingsPath } else { $ExampleSettingsPath })"
-Write-Host "Pozycji bloatware na liście: $($bloat.Count)"
-
-Remove-BloatwareAppx -PackageNames $bloat
-Set-WallpaperSetting -Settings $settings
-Set-ThemeSetting -Settings $settings
-Set-DefaultBrowserSetting -Settings $settings
-
-Write-Host "Customize: koniec."
