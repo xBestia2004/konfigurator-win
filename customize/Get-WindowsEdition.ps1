@@ -6,6 +6,7 @@
   Odczytuje szczegółowe informacje o systemie z rejestru oraz WMI/CIM,
   w tym wersję funkcjonalną (np. 23H2), numer kompilacji, architekturę
   oraz status uprawnień administratora.
+  Wspiera zarówno wywołanie bezpośrednie z konsoli, jak i użycie z poziomu kreatora GUI (Start-Kreator.ps1).
 
 .PARAMETER AsJson
   Zwraca wynik sformatowany jako JSON.
@@ -50,7 +51,9 @@ function Get-WindowsSystemInfo {
     if (-not (Test-IsWindowsEnvironment)) {
         Write-Warning "Skrypt uruchomiony w środowisku innym niż Windows ($([System.Environment]::OSVersion.VersionString))."
         return [PSCustomObject]@{
+            Caption        = "Non-Windows Platform ($([System.Environment]::OSVersion.Platform))"
             OSName         = "Non-Windows Platform ($([System.Environment]::OSVersion.Platform))"
+            ProductName    = "Non-Windows Platform ($([System.Environment]::OSVersion.Platform))"
             DisplayVersion = "N/A"
             EditionID      = "N/A"
             BuildNumber    = [string][System.Environment]::OSVersion.Version
@@ -92,7 +95,9 @@ function Get-WindowsSystemInfo {
     $isAdmin = Test-IsAdministrator
 
     [PSCustomObject]@{
+        Caption        = [string]$productName
         OSName         = [string]$productName
+        ProductName    = [string]$productName
         DisplayVersion = [string]$displayVer
         EditionID      = [string]$editionId
         BuildNumber    = [string]$fullBuild
@@ -102,21 +107,33 @@ function Get-WindowsSystemInfo {
     }
 }
 
-$info = Get-WindowsSystemInfo
-
-if ($AsJson) {
-    return ($info | ConvertTo-Json -Depth 3)
+function Get-RunningWindowsEdition {
+    return (Get-WindowsSystemInfo)
 }
 
-Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host " Informacje o systemie Windows" -ForegroundColor Cyan
-Write-Host "==================================================" -ForegroundColor Cyan
-Write-Host " System operacyjny : $($info.OSName)"
-Write-Host " Wersja (Release)  : $($info.DisplayVersion)"
-Write-Host " Identyfikator     : $($info.EditionID)"
-Write-Host " Kompilacja (Build): $($info.BuildNumber)"
-Write-Host " Architektura      : $($info.Architecture)"
-Write-Host " Uprawnienia Admin : $(if ($info.IsAdmin) { 'TAK (Administrator)' } else { 'NIE (Użytkownik zwykły)' })" -ForegroundColor $(if ($info.IsAdmin) { 'Green' } else { 'Yellow' })
-Write-Host "==================================================" -ForegroundColor Cyan
+function Invoke-GetWindowsEditionMain {
+    param([switch]$AsJson)
 
-return $info
+    $info = Get-WindowsSystemInfo
+
+    if ($AsJson) {
+        return ($info | ConvertTo-Json -Depth 3)
+    }
+
+    Write-Host "==================================================" -ForegroundColor Cyan
+    Write-Host " Informacje o systemie Windows" -ForegroundColor Cyan
+    Write-Host "==================================================" -ForegroundColor Cyan
+    Write-Host " System operacyjny : $($info.Caption)"
+    Write-Host " Wersja (Release)  : $($info.DisplayVersion)"
+    Write-Host " Identyfikator     : $($info.EditionID)"
+    Write-Host " Kompilacja (Build): $($info.BuildNumber)"
+    Write-Host " Architektura      : $($info.Architecture)"
+    Write-Host " Uprawnienia Admin : $(if ($info.IsAdmin) { 'TAK (Administrator)' } else { 'NIE (Użytkownik zwykły)' })" -ForegroundColor $(if ($info.IsAdmin) { 'Green' } else { 'Yellow' })
+    Write-Host "==================================================" -ForegroundColor Cyan
+
+    return $info
+}
+
+if ($MyInvocation.InvocationName -ne '.') {
+    Invoke-GetWindowsEditionMain -AsJson:$AsJson
+}

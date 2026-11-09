@@ -1,115 +1,314 @@
 # konfigurator-win
 
-Szkielet (wczesna wersja) narzędzi PowerShell do przygotowania świeżej instalacji Windows.
+<p align="center">
+  <img src="https://img.shields.io/badge/Wersja-1.0.0-blue.svg?style=for-the-badge" alt="Wersja">
+  <img src="https://img.shields.io/badge/PowerShell-5.1%20%7C%207%2B-blueviolet?style=for-the-badge&logo=powershell" alt="PowerShell">
+  <img src="https://img.shields.io/badge/System-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows" alt="Platforma">
+  <img src="https://img.shields.io/badge/Interfejs-CLI%20%2B%20GUI-orange?style=for-the-badge" alt="Interfejs">
+  <img src="https://img.shields.io/badge/Licencja-MIT-green.svg?style=for-the-badge" alt="Licencja">
+  <img src="https://img.shields.io/badge/Status-Aktywny%20v1.0.0-success.svg?style=for-the-badge" alt="Status">
+</p>
 
-Projekt ma w przyszłości:
+<p align="center">
+  <b>Profesjonalny zestaw narzędzi PowerShell oraz interfejs graficzny do kompleksowej automatyzacji, personalizacji oraz debloatu świeżo zainstalowanego systemu Windows 10 i 11.</b>
+</p>
 
-1. Pobrać obraz Windows 10 lub 11 (edycje Pro i Home) z oficjalnego źródła Microsoft.
-2. Rozpoznać edycję systemu, która właśnie działa na komputerze.
-3. Dostosować system: usunąć zbędne aplikacje z listy, zastosować ustawienia z pliku konfiguracyjnego (tapeta, motyw, domyślna przeglądarka i inne).
-4. Zainstalować ulubione programy przez winget.
+---
 
-Na razie to tylko szkielet. Skrypty mają tryb podglądu (domyślnie nic nie zmieniają na dysku) i miejsca oznaczone TODO.
+## 📋 Spis treści
 
-## Autor
+- [O projekcie](#-o-projekcie)
+- [Główne możliwości](#-główne-możliwości)
+- [Architektura procesu](#-architektura-procesu)
+- [Struktura katalogów](#-struktura-katalogów)
+- [Wymagania systemowe](#-wymagania-systemowe)
+- [Szybki start](#-szybki-start)
+  - [Opcja A: Kreator graficzny (GUI)](#opcja-a-kreator-graficzny-gui)
+  - [Opcja B: Wiersz poleceń (CLI)](#opcja-b-wiersz-poleceń-cli)
+- [Przewodnik konfiguracji](#-przewodnik-konfiguracji)
+  - [Personalizacja systemu (`settings.json`)](#personalizacja-systemu-settingsjson)
+  - [Usuwanie aplikacji bloatware (`bloatware.txt`)](#usuwanie-aplikacji-bloatware-bloatwaretxt)
+  - [Zestaw aplikacji (`apps.json`)](#zestaw-aplikacji-appsjson)
+- [Parametry skryptu `bootstrap.ps1`](#-parametry-skryptu-bootstrapps1)
+- [Bezpieczeństwo i transparentność](#-bezpieczeństwo-i-transparentność)
+- [Plany rozwojowe (Backlog)](#-plany-rozwojowe-backlog)
+- [Często zadawane pytania (FAQ)](#-często-zadawane-pytania-faq)
+- [Współtworzenie](#-współtworzenie)
+- [Autor](#-autor)
+- [Licencja](#-licencja)
 
-Dariusz Kisiel, technik informatyk, Lublin
+---
 
-## Kreator graficzny
+## 💡 O projekcie
 
-Na Windows możesz przejść przez kroki w oknie kreatora (Windows Forms).
+**konfigurator-win** powstał w celu skrócenia czasu wdrożenia i konfiguracji systemu operacyjnego Windows na stacjach roboczych i komputerach prywatnych. Narzędzie łączy w sobie pobieranie oficjalnych nośników, czyszczenie systemu z niechcianych aplikacji OEM/Microsoftu, optymalizację ustawień interfejsu oraz cichą instalację niezbędnego oprogramowania.
 
-Uruchomienie (najlepiej jako administrator):
+Projekt oferuje dwa równorzędne sposoby obsługi:
+1. **Tryb graficzny (Kreator GUI)** – okienkowy asystent krok po kroku (`Kreator.cmd`), idealny do szybkiej pracy bez konieczności edycji plików tekstowych.
+2. **Tryb wsadowy / CLI (`bootstrap.ps1`)** – w pełni skryptowalne, powtarzalne środowisko automatyzacji dla administratorów i techników IT.
 
-- dwuklik `Kreator.cmd`, albo
-- w PowerShell:
+W przeciwieństwie do wielu nieprzejrzystych skryptów dostępnych w sieci:
+- **Domyślnie działa w trybie podglądu (`-WhatIf` / Dry-Run)**: nie wprowadzi żadnych zmian bez Twojej wyraźnej decyzji.
+- **Korzysta wyłącznie z oficjalnych kanałów Microsoftu**: żadnych nieoficjalnych mirrorów ISO ani modyfikowanych instalatorów.
+- **Jest w pełni modułowy i transparentny**: każdy komponent można uruchomić niezależnie, a kod jest otwarty i przejrzyście skomentowany.
 
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -STA -File .\gui\Start-Kreator.ps1
+---
+
+## ⚡ Główne możliwości
+
+- 🖥️ **Wygodny Kreator Graficzny (Windows Forms)**: Prosty w obsłudze interfejs z podglądem na żywo, możliwością odznaczenia niechcianych programów i paskiem postępu.
+- 🔍 **Precyzyjna inspekcja środowiska**: Automatyczne rozpoznawanie architektury, edycji (Home / Pro), numeru kompilacji i wydania (np. 23H2, 24H2) oraz uprawnień administratora.
+- 🧹 **Dwuetapowy Debloat Appx**: Usuwanie zbędnych aplikacji zarówno z profilu bieżącego użytkownika (`Remove-AppxPackage`), jak i z obrazu aprowizowanego systemu (`Remove-AppxProvisionedPackage`), co zapobiega ich powracaniu przy tworzeniu nowych kont.
+- 🎨 **Optymalizacja interfejsu & UX**:
+  - Automatyczne przełączanie na **ciemny motyw** (Dark Mode) dla aplikacji i powłoki systemowej.
+  - Wyrównanie paska zadań do lewej strony (w stylu klasycznym) w Windows 11.
+  - Włączenie widoczności rozszerzeń plików (`.exe`, `.iso`, itp.) oraz ukrytych folderów.
+  - Wyłączenie widżetów na pasku zadań.
+- 🛡️ **Prywatność**:
+  - Wyłączenie wyników wyszukiwania Bing i reklam w menu Start.
+  - Ograniczenie telemetrii do poziomu minimalnego.
+- 📦 **Cicha instalacja programów (winget)**:
+  - Automatyczna instalacja ulubionych narzędzi (przeglądarki, edytory, kodeki, narzędzia diagnostyczne).
+  - Weryfikacja obecności oprogramowania przed instalacją (unikanie zbędnych pobrań).
+  - Opcja automatycznej aktualizacji zainstalowanych programów (`-UpgradeApps`).
+- 💿 **Oficjalny asystent ISO**:
+  - Bezpośrednie pobieranie oficjalnego narzędzia Media Creation Tool.
+  - Weryfikacja integralności sum kontrolnych SHA-256 dla pobranych obrazów.
+
+---
+
+## 🔄 Architektura procesu
+
+```mermaid
+flowchart TD
+    Start["Start"] --> Choice{"Wybór interfejsu"}
+    Choice -- GUI --> GUI["Kreator.cmd<br/>(gui/Start-Kreator.ps1)"]
+    Choice -- CLI --> CLI["bootstrap.ps1"]
+    
+    GUI --> Step1["Detekcja edycji Windows<br/>(customize/Get-WindowsEdition.ps1)"]
+    CLI --> Step1
+    
+    Step1 --> Step2["Pobieranie & weryfikacja nośnika<br/>(download/Get-WindowsImage.ps1)"]
+    Step2 --> Step3["Personalizacja & Debloat Appx<br/>(customize/Invoke-Customize.ps1)"]
+    Step3 --> Step4["Cicha instalacja programów<br/>(install/Install-Apps.ps1)"]
+    Step4 --> Finish["Gotowe / Raport podsumowujący"]
 ```
 
-Kreator pokazuje wykrytą edycję Windows, sprawdza uprawnienia administratora i obecność winget, a potem prowadzi przez pobranie informacji o obrazie, dostosowanie i instalację aplikacji. Domyślnie zaznaczony jest **Tryb próbny (bez zmian w systemie)**. W trybie próbnym nic nie jest usuwane ani instalowane, tylko logowane. Odznaczenie trybu próbnego przekazuje pracę do istniejących skryptów w trybie wykonawczym.
+---
 
-## Struktura
+## 📂 Struktura katalogów
 
 ```
 konfigurator-win/
-  Kreator.cmd                # szybkie uruchomienie kreatora (STA)
-  bootstrap.ps1              # uruchamia kolejne kroki (konsola)
-  README.md
-  BACKLOG.md                 # planowane funkcje
-  LICENSE
-  .gitignore
-  gui/
-    Start-Kreator.ps1        # kreator graficzny (Windows Forms)
-  download/
-    Get-WindowsImage.ps1     # pobieranie obrazu (szkielet)
-  customize/
-    Get-WindowsEdition.ps1   # rozpoznanie edycji systemu
-    Invoke-Customize.ps1     # usuwanie bloatware i ustawienia
-    bloatware.txt            # lista nazw pakietów Appx
-    settings.example.json    # przykład ustawień
-  install/
-    Install-Apps.ps1         # instalacja przez winget
-    apps.example.json        # przykład listy aplikacji
+├── Kreator.cmd                   # Launcher asystenta graficznego (dwuklik w Windows)
+├── bootstrap.ps1                 # Główny orkiestrator CLI całego procesu
+├── README.md                     # Dokumentacja główna projektu
+├── LICENSE                       # Licencja MIT
+├── CHANGELOG.md                  # Historia wydań i zmian
+├── CONTRIBUTING.md               # Wytyczne dla współtwórców
+├── BACKLOG.md                    # Planowane funkcjonalności
+├── .gitignore                    # Reguły ignorowania plików lokalnych i ISO
+│
+├── gui/
+│   └── Start-Kreator.ps1         # Okienkowy kreator krok po kroku (Windows Forms)
+│
+├── download/
+│   └── Get-WindowsImage.ps1      # Asystent pobierania oficjalnych nośników ISO i MCT
+│
+├── customize/
+│   ├── Get-WindowsEdition.ps1    # Inspekcja działającej edycji i kompilacji Windows
+│   ├── Invoke-Customize.ps1      # Silnik usuwania bloatware i modyfikacji rejestru
+│   ├── bloatware.txt             # Wykaz nazw pakietów Appx przeznaczonych do usunięcia
+│   └── settings.example.json     # Szablon ustawień interfejsu i systemu
+│
+└── install/
+    ├── Install-Apps.ps1          # Instalator oprogramowania oparty o winget
+    └── apps.example.json         # Szablon listy programów z podziałem na kategorie
 ```
 
-## Inspiracja
+---
 
-Pomysł na ten projekt wziął się z narzędzia [WinUtil od Chris Titus Tech](https://github.com/ChrisTitusTech/winutil). Dziękuję autorowi za jego pracę.
+## 💻 Wymagania systemowe
 
-konfigurator-win próbuje pójść o krok dalej. W planach jest zapis gotowego obrazu Windows z tą samą konfiguracją na bootowalny pendrive oraz możliwość uruchomienia narzędzia z Windows, Linuksa i macOS. Te funkcje nie są jeszcze gotowe. Dziś dostosowanie systemu i instalacja programów działają na Windows, a szczegóły planów są w pliku `BACKLOG.md`.
+- **System operacyjny**: Windows 10 (od wersji 1809) lub Windows 11 (zalecany).
+- **PowerShell**: Wbudowany PowerShell 5.1 lub nowszy [PowerShell 7+](https://github.com/PowerShell/PowerShell).
+- **Uprawnienia**: Uprawnienia Administratora (wymagane do usuwania pakietów aprowizowanych oraz instalacji systemowych przez winget).
+- **Połączenie sieciowe**: Wymagane do pobierania aplikacji przez menedżer winget.
 
-## Plany
+---
 
-Planowane funkcje (m.in. bootowalny pendrive) są opisane w pliku `BACKLOG.md`.
+## 🚀 Szybki start
 
-## Wymagania
+### Klonowanie repozytorium
 
-- Windows 10 lub Windows 11
-- PowerShell 5.1 lub PowerShell 7 (kreator GUI: 5.1+ w trybie STA)
-- Uprawnienia administratora do realnych zmian (usuwanie Appx, winget, część ustawień)
-- winget (App Installer z Microsoft Store), gdy chcesz instalować programy
-
-## Bezpieczeństwo
-
-Najpierw uruchom skrypty w maszynie wirtualnej albo na kopii zapasowej. Domyślnie działa tryb podglądu (`-WhatIf` / dry-run / tryb próbny w kreatorze): skrypt tylko wypisuje, co by zrobił. Dopiero jawne `-WhatIf:$false` (albo `-DryRun:$false`, albo odznaczenie trybu próbnego w GUI) wykonuje zmiany.
-
-Obrazy Windows pobieraj wyłącznie ze stron Microsoft. Ten projekt nie wskazuje nieoficjalnych mirrorów.
-
-## Przykład użycia (konsola)
-
-W PowerShell uruchomionym jako administrator, w katalogu projektu:
+Otwórz terminal (lub PowerShell) i pobierz projekt:
 
 ```powershell
-# tylko podgląd (domyślnie)
-.\bootstrap.ps1
-
-# podgląd z wybraną wersją obrazu
-.\bootstrap.ps1 -WindowsVersion 11 -Edition Pro
-
-# realne zmiany dopiero po świadomej decyzji
-.\bootstrap.ps1 -WhatIf:$false
+git clone https://github.com/xBestia2004/konfigurator-win.git
+cd konfigurator-win
 ```
 
-Pojedyncze kroki:
+---
 
+### Opcja A: Kreator graficzny (GUI)
+
+Najprostszy sposób dla użytkowników domowych i techników:
+1. Kliknij dwukrotnie plik **`Kreator.cmd`** (lub uruchom go jako Administrator).
+2. Przejdź przez kolejne kroki kreatora (wybór pakietów bloatware, programów i opcji).
+3. Domyślnie kreator działa w bezpiecznym trybie podglądu (checkbox *Tryb próbny*). Odznacz go, gdy chcesz wprowadzić zmiany w systemie.
+
+---
+
+### Opcja B: Wiersz poleceń (CLI)
+
+Dla administratorów automatyzujących przygotowanie maszyn:
+
+1. **Przygotowanie konfiguracji lokalnej**:
+   ```powershell
+   Copy-Item .\customize\settings.example.json .\customize\settings.json
+   Copy-Item .\install\apps.example.json .\install\apps.json
+   ```
+
+2. **Uruchomienie w trybie podglądu (Bezpieczny Dry-Run)**:
+   ```powershell
+   .\bootstrap.ps1
+   ```
+
+3. **Wykonanie zmian w systemie**:
+   ```powershell
+   .\bootstrap.ps1 -WhatIf:$false -RestartExplorer
+   ```
+
+---
+
+## ⚙️ Przewodnik konfiguracji
+
+### Personalizacja systemu (`settings.json`)
+
+Plik `customize/settings.json` pozwala zdefiniować zachowanie powłoki i opcje prywatności:
+
+| Klucz | Typ | Domyślnie | Opis |
+| :--- | :--- | :--- | :--- |
+| `theme` | string | `"dark"` | Motyw systemu (`"dark"` dla ciemnego, `"light"` dla jasnego). |
+| `defaultBrowser` | string | `"Mozilla.Firefox"` | Preferowana przeglądarka internetowa. |
+| `taskbarAlignLeft` | bool | `true` | Wyrównanie ikonek paska zadań do lewej strony (Windows 11). |
+| `showFileExtensions` | bool | `true` | Pokazywanie rozszerzeń znanych typów plików w Eksploratorze. |
+| `showHiddenFiles` | bool | `true` | Pokazywanie ukrytych plików i folderów. |
+| `disableWidgets` | bool | `true` | Ukrycie ikony widżetów z paska zadań (Windows 11). |
+| `disableBingSearch` | bool | `true` | Wyłączenie wyników wyszukiwania internetowego Bing w menu Start. |
+| `disableTelemetry` | bool | `true` | Ograniczenie diagnostycznej telemetrii systemowej do minimum. |
+| `wallpaper` | string | `""` | Opcjonalna ścieżka do pliku graficznego tapety pulpitu. |
+
+### Usuwanie aplikacji bloatware (`bloatware.txt`)
+
+Plik `customize/bloatware.txt` zawiera listę identyfikatorów pakietów Appx. Każda niezakomentowana linijka zostanie poddana procesowi deinstalacji.
+
+Przykładowy fragment:
+```text
+# --- Wiadomości, Finanse i Pogoda ---
+Microsoft.BingNews
+Microsoft.BingWeather
+Microsoft.BingFinance
+
+# --- Gry i narzędzia promocyjne ---
+Microsoft.MicrosoftSolitaireCollection
+Microsoft.GetHelp
+Clipchamp.Clipchamp
+```
+> [!TIP]
+> Jeśli korzystasz z aplikacji Xbox lub posiadasz subskrypcję Xbox Game Pass, pozostaw pakiety z sekcji Xbox zakomentowane znakiem `#`.
+
+### Zestaw aplikacji (`apps.json`)
+
+Plik `install/apps.json` definiuje listę oprogramowania instalowanego przez menedżer pakietów `winget`. Możesz wskazać dowolny poprawny identyfikator z oficjalnego repozytorium winget:
+
+```json
+{
+  "apps": [
+    { "id": "Mozilla.Firefox", "name": "Mozilla Firefox", "category": "Przeglądarki" },
+    { "id": "7zip.7zip", "name": "7-Zip", "category": "Narzędzia" },
+    { "id": "VideoLAN.VLC", "name": "VLC Media Player", "category": "Multimedia" },
+    { "id": "Notepad++.Notepad++", "name": "Notepad++", "category": "Edytory" },
+    { "id": "Microsoft.VisualStudioCode", "name": "Visual Studio Code", "category": "Programowanie" },
+    { "id": "Microsoft.PowerToys", "name": "Microsoft PowerToys", "category": "Narzędzia" }
+  ]
+}
+```
+
+---
+
+## 🛠️ Parametry skryptu `bootstrap.ps1`
+
+| Parametr | Typ | Domyślnie | Opis |
+| :--- | :--- | :--- | :--- |
+| `-WhatIf` | switch | `$true` | Przełącza pomiędzy trybem podglądu a wykonawczym (`-WhatIf:$false`). |
+| `-WindowsVersion` | string | `'11'` | Wersja docelowa dla asystenta nośnika (`'10'` lub `'11'`). |
+| `-SkipDownload` | switch | `$false` | Pomija krok sprawdzania / pobierania obrazu Windows. |
+| `-SkipCustomize` | switch | `$false` | Pomija usuwanie aplikacji Appx oraz konfigurację rejestru. |
+| `-SkipInstall` | switch | `$false` | Pomija krok instalacji oprogramowania przez winget. |
+| `-UpgradeApps` | switch | `$false` | Wymusza aktualizację pakietów, jeśli są już obecne w systemie. |
+| `-RestartExplorer`| switch | `$false` | Restartuje proces `explorer.exe` w celu natychmiastowego odświeżenia paska zadań. |
+| `-Log` | switch | `$false` | Zapisuje pełny przebieg wykonania do pliku dziennika w folderze `logs/`. |
+
+---
+
+## 🔒 Bezpieczeństwo i transparentność
+
+1. **Brak ukrytego kodu**: Wszystkie skrypty to czysty, czytelny PowerShell bez zaciemniania kodu (obfuscation) i bez pobierania zewnętrznych skryptów z nieznanych serwerów.
+2. **Integralność danych**: Narzędzie `Get-WindowsImage.ps1` posiada funkcję automatycznego wyliczania i porównywania skrótów kryptograficznych SHA-256 (`-VerifyIsoPath`).
+3. **Idempotentność**: Uruchomienie skryptów wielokrotnie nie uszkodzi działającego systemu — pakiety już usunięte lub zainstalowane są bezpiecznie pomijane.
+
+---
+
+## 🗺️ Plany rozwojowe (Backlog)
+
+Szczegółowy wykaz planowanych funkcji znajduje się w pliku [BACKLOG.md](BACKLOG.md).
+Kluczowym kolejnym kamieniem milowym projektu jest:
+- **Wieloplatformowy kreator bootowalnego pendrive'a USB** działający w środowiskach Windows, Linux oraz macOS, automatycznie dogrywający konfigurator na instalowany nośnik.
+
+---
+
+## ❓ Często zadawane pytania (FAQ)
+
+<details>
+<summary><b>1. Pojawia się błąd: „plik nie może zostać załadowany, ponieważ uruchamianie skryptów jest wyłączone”.</b></summary>
+
+Domyślna polityka bezpieczeństwa PowerShell blokuje niepodpisane skrypty. Aby zezwolić na uruchomienie w bieżącym oknie konsoli, wykonaj:
 ```powershell
-.\download\Get-WindowsImage.ps1 -Version 11 -Edition Home
-.\customize\Get-WindowsEdition.ps1
-.\customize\Invoke-Customize.ps1
-.\install\Install-Apps.ps1
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
 ```
+</details>
 
-Przed realnym dostosowaniem skopiuj przykłady:
+<details>
+<summary><b>2. Skąd pobierany jest winget i jak go zainstalować w przypadku braku?</b></summary>
 
-```powershell
-Copy-Item .\customize\settings.example.json .\customize\settings.json
-Copy-Item .\install\apps.example.json .\install\apps.json
-```
+Menedżer pakietów `winget` (App Installer) jest fabrycznie zainstalowany w Windows 11 i nowszych wersjach Windows 10. Jeśli go brakuje, zaktualizuj aplikację **Instalator aplikacji** w Microsoft Store lub pobierz oficjalną paczkę ze strony [GitHub winget-cli releases](https://github.com/microsoft/winget-cli/releases).
+</details>
 
-Pliki `settings.json` i `apps.json` są lokalne i nie powinny trafiać do repozytorium (patrz `.gitignore`).
+<details>
+<summary><b>3. Czy usunięte aplikacje bloatware można przywrócić?</b></summary>
 
-## Licencja
+Tak. Dowolną odinstalowaną aplikację Microsoftu (np. Kalkulator, Pogoda, Xbox) możesz w każdej chwili ponownie pobrać ze sklepu Microsoft Store.
+</details>
 
-MIT. Szczegóły w pliku `LICENSE`.
+---
+
+## 🤝 Współtworzenie
+
+Chcesz dodać nowe ustawienie, ulepszyć listę bloatware lub zaproponować funkcję?
+Sprawdź plik [CONTRIBUTING.md](CONTRIBUTING.md) i wyślij swój Pull Request!
+
+---
+
+## 👤 Autor
+
+**Dariusz Kisiel**  
+- Technik Informatyk, Lublin  
+- Profil GitHub: [@xBestia2004](https://github.com/xBestia2004)  
+- E-mail: `dariuszkisiel2004@int.pl`
+
+---
+
+## 📄 Licencja
+
+Projekt jest udostępniany na warunkach otwartej licencji **MIT**. Szczegóły znajdują się w pliku [LICENSE](LICENSE).

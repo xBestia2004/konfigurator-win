@@ -1,10 +1,35 @@
-<#
+﻿<#
 .SYNOPSIS
-  Instaluje ulubione aplikacje przez winget (szkielet).
+  Automatyczna instalacja pakietów oprogramowania za pośrednictwem menedżera pakietów Windows Package Manager (winget).
 
 .DESCRIPTION
-  Domyślnie tryb podglądu (-DryRun). Wymaga winget przy realnej instalacji.
-  Opcjonalnie -AppIds ogranicza instalację do wybranych identyfikatorów (kreator GUI).
+  Skrypt odczytuje listę aplikacji z pliku JSON (apps.json lub szablonu apps.example.json)
+  i instaluje je w trybie cichym (unattended) wraz z automatyczną akceptacją licencji.
+  Sprawdza obecność aplikacji przed próbą ponownej instalacji.
+  Wspiera uruchomienie bezpośrednie, z orkiestratora bootstrap.ps1 oraz z kreatora GUI (Start-Kreator.ps1).
+
+.PARAMETER AppsPath
+  Ścieżka do pliku konfiguracji aplikacji w formacie JSON. Domyślnie: apps.json.
+
+.PARAMETER ExampleAppsPath
+  Ścieżka do domyślnego szablonu aplikacji. Domyślnie: apps.example.json.
+
+.PARAMETER DryRun
+  Uruchamia skrypt w trybie symulacji (podglądu) - żadne pakiety nie zostaną faktycznie pobrane ani zainstalowane.
+
+.PARAMETER AppIds
+  Opcjonalny filtr identyfikatorów pakietów (np. przekazany z zaznaczonych pozycji w GUI).
+
+.PARAMETER UpgradeExisting
+  Jeśli pakiet jest już zainstalowany, próbuje zaktualizować go do najnowszej wersji.
+
+.EXAMPLE
+  .\Install-Apps.ps1 -DryRun
+  # Podgląd listy aplikacji i komend winget bez ich wykonywania.
+
+.EXAMPLE
+  .\Install-Apps.ps1
+  # Rzeczywista instalacja programów z pliku apps.json.
 #>
 [CmdletBinding()]
 param(
@@ -18,7 +43,10 @@ param(
     [switch]$DryRun = $true,
 
     [Parameter(Mandatory = $false)]
-    [string[]]$AppIds = @()
+    [string[]]$AppIds = @(),
+
+    [Parameter(Mandatory = $false)]
+    [switch]$UpgradeExisting
 )
 
 Set-StrictMode -Version Latest
@@ -34,9 +62,16 @@ else {
     $script:IsDryRun = [bool]$DryRun
 }
 
+function Test-IsWindows {
+    if ($PSVersionTable.ContainsKey('Platform')) {
+        return ($PSVersionTable.Platform -eq 'Win32NT')
+    }
+    return ([System.Environment]::OSVersion.Platform -eq [System.PlatformID]::Win32NT)
+}
+
 function Test-WingetAvailable {
     $cmd = Get-Command -Name winget -ErrorAction SilentlyContinue
-    return $null -ne $cmd
+    return ($null -ne $cmd)
 }
 
 function Get-AppList {
@@ -45,19 +80,38 @@ function Get-AppList {
         [string]$ExamplePath
     )
 
-    $usePath = $Path
-    if (-not (Test-Path -LiteralPath $usePath)) {
+    $targetPath = $Path
+    if (-not (Test-Path -LiteralPath $targetPath)) {
         if (Test-Path -LiteralPath $ExamplePath) {
-            Write-Warning "Brak $usePath. Używam przykładu: $ExamplePath"
-            $usePath = $ExamplePath
+            Write-Warning "Brak lokalnego pliku '$Path'. Używam szablonu: '$ExamplePath'."
+            $targetPath = $ExamplePath
         }
         else {
-            throw "Brak listy aplikacji: $Path"
+            throw "Nie znaleziono pliku konfiguracji aplikacji: '$Path' ani szablonu '$ExamplePath'."
         }
     }
 
-    $json = Get-Content -LiteralPath $usePath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $json = Get-Content -LiteralPath $targetPath -Raw -Encoding UTF8 | ConvertFrom-Json
     return @($json.apps)
+}
+
+function Test-AppAlreadyInstalled {
+    param([string]$PackageId)
+
+    if (-not (Test-IsWindows) -or -not (Test-WingetAvailable)) {
+        return $false
+    }
+
+    try {
+        $check = winget list --id $PackageId --exact --accept-source-agreements 2>&1
+        if ($LASTEXITCODE -eq 0 -and $check -match [regex]::Escape($PackageId)) {
+            return $true
+        }
+    }
+    catch {
+        # Ignoruj błąd sprawdzania
+    }
+    return $false
 }
 
 function Install-WingetApp {
@@ -66,20 +120,41 @@ function Install-WingetApp {
         [string]$Id,
 
         [Parameter(Mandatory = $false)]
-        [string]$Name = $Id
+        [string]$Name = $Id,
+
+        [Parameter(Mandatory = $false)]
+        [switch]$UpgradeExisting
     )
 
     $display = if ($Name) { "$Name ($Id)" } else { $Id }
 
-    if ($script:IsDryRun) {
-        Write-Host "[DryRun] winget install --id $Id --exact --silent --accept-package-agreements --accept-source-agreements"
+    if ($script:IsDryRun -or -not (Test-IsWindows)) {
+        Write-Host "  [DryRun] winget install --id $Id --exact --silent --accept-package-agreements --accept-source-agreements" -ForegroundColor DarkCyan
         return
     }
 
-    Write-Host "[install] $display"
+    $alreadyInstalled = Test-AppAlreadyInstalled -PackageId $Id
+
+    if ($alreadyInstalled -and -not $UpgradeExisting) {
+        Write-Host "  [pomijam] Program jest już zainstalowany: $display" -ForegroundColor Gray
+        return
+    }
+    elseif ($alreadyInstalled -and $UpgradeExisting) {
+        Write-Host "  [aktualizacja] $display" -ForegroundColor Yellow
+        & winget upgrade --id $Id --exact --silent --accept-package-agreements --accept-source-agreements
+        if ($LASTEXITCODE -ne 0) {
+            Write-Warning "winget zwrócił kod $LASTEXITCODE podczas aktualizacji $Id"
+        }
+        return
+    }
+
+    Write-Host "  [instalacja] $display" -ForegroundColor Yellow
     & winget install --id $Id --exact --silent --accept-package-agreements --accept-source-agreements
     if ($LASTEXITCODE -ne 0) {
-        Write-Warning "winget zwrócił kod $LASTEXITCODE dla $Id"
+        Write-Warning "winget zwrócił kod $LASTEXITCODE podczas instalacji $Id"
+    }
+    else {
+        Write-Host "  [OK] Zainstalowano pomyślnie: $display" -ForegroundColor Green
     }
 }
 
@@ -87,24 +162,39 @@ function Invoke-InstallAppsMain {
     param(
         [string]$AppsPath,
         [string]$ExampleAppsPath,
-        [string[]]$AppIds
+        [string[]]$AppIds,
+        [switch]$UpgradeExisting
     )
 
-    Write-Host "=== Install-Apps ==="
-    if ($script:IsDryRun) {
-        Write-Host "Tryb podglądu (DryRun). Nic nie zostanie zainstalowane."
+    Write-Host "==================================================" -ForegroundColor Cyan
+    Write-Host " Install-Apps: Instalator pakietów winget" -ForegroundColor Cyan
+    Write-Host "==================================================" -ForegroundColor Cyan
+
+    $isSimulation = [bool]$script:IsDryRun
+    if (-not (Test-IsWindows)) {
+        Write-Warning "Środowisko inne niż Windows - wymuszenie trybu symulacji (DryRun)."
+        $isSimulation = $true
+        $script:IsDryRun = $true
     }
 
-    if (-not (Test-WingetAvailable)) {
-        if ($script:IsDryRun) {
-            Write-Warning "winget nie jest dostępny w PATH. W podglądzie kontynuuję; przy realnej instalacji będzie wymagany."
-        }
-        else {
-            throw "winget nie jest dostępny. Zainstaluj App Installer (Microsoft Store) i spróbuj ponownie."
-        }
+    if ($isSimulation) {
+        Write-Host "STATUS: TRYB PODGLĄDU (-DryRun)." -ForegroundColor Yellow
+        Write-Host "Żadne aplikacje nie zostaną zainstalowane.`n" -ForegroundColor Yellow
     }
     else {
-        Write-Host "winget: znaleziony"
+        Write-Host "STATUS: TRYB INSTALACJI." -ForegroundColor Green
+        Write-Host "Pakiety zostaną zainstalowane w trybie cichym (silent).`n" -ForegroundColor Green
+    }
+
+    $wingetExists = Test-WingetAvailable
+    if (-not $wingetExists) {
+        if ($isSimulation) {
+            Write-Warning "winget nie jest dostępny w bieżącym środowisku. W trybie symulacji kontynuuję."
+        }
+        else {
+            Write-Error "Menedżer pakietów 'winget' nie został odnaleziony w systemie.`nZainstaluj 'App Installer' z Microsoft Store lub pobierz pakiet z: https://github.com/microsoft/winget-cli/releases"
+            return
+        }
     }
 
     $apps = Get-AppList -Path $AppsPath -ExamplePath $ExampleAppsPath
@@ -113,24 +203,24 @@ function Invoke-InstallAppsMain {
         $idSet = @{}
         foreach ($id in $AppIds) { $idSet[[string]$id] = $true }
         $apps = @($apps | Where-Object { $idSet.ContainsKey([string]$_.id) })
-        Write-Host "Filtrowanie AppIds: $($apps.Count) pozycji"
+        Write-Host "Filtrowanie pozycji: $($apps.Count) wybranych pakietów"
     }
 
-    Write-Host "Aplikacji na liście: $($apps.Count)"
+    Write-Host "Liczba pakietów na liście do przetworzenia: $($apps.Count)`n" -ForegroundColor Cyan
 
     foreach ($app in $apps) {
         $id = [string]$app.id
         $name = [string]$app.name
         if (-not $id) {
-            Write-Warning "Pomijam wpis bez id: $($app | ConvertTo-Json -Compress)"
+            Write-Warning "Pomijam wpis bez identyfikatora ID."
             continue
         }
-        Install-WingetApp -Id $id -Name $name
+        Install-WingetApp -Id $id -Name $name -UpgradeExisting:$UpgradeExisting
     }
 
-    Write-Host "Install-Apps: koniec."
+    Write-Host "`nInstall-Apps: proces instalacji zakończony." -ForegroundColor Green
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
-    Invoke-InstallAppsMain -AppsPath $AppsPath -ExampleAppsPath $ExampleAppsPath -AppIds $AppIds
+    Invoke-InstallAppsMain -AppsPath $AppsPath -ExampleAppsPath $ExampleAppsPath -AppIds $AppIds -UpgradeExisting:$UpgradeExisting
 }

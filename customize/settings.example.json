@@ -3,6 +3,7 @@
   "title": "Windows Customization Settings",
   "description": "Konfiguracja wyglądu i zachowania systemu Windows. Skopiuj ten plik jako settings.json i dostosuj według uznania.",
   "theme": "dark",
+  "defaultBrowser": "Mozilla.Firefox",
   "taskbarAlignLeft": true,
   "showFileExtensions": true,
   "showHiddenFiles": true,
