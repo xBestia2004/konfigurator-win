@@ -1,4 +1,4 @@
-#requires -Version 5.1
+﻿#requires -Version 5.1
 <#
 .SYNOPSIS
   Kreator graficzny konfigurator-win (Windows Forms).
@@ -564,8 +564,8 @@ Krok 2 (dostosowanie): $d2
 Krok 3 (instalacja): $d3
   Zaznaczone aplikacje: $($selApps.Count)
 
-To szkielet. Pobieranie ISO, tapeta, motyw i domyślna przeglądarka są jeszcze TODO.
-Możesz zamknąć kreator przyciskiem Anuluj albo wrócić Wstecz.
+Konfigurator jest gotowy. Wybrane operacje zostaną zastosowane zgodnie z trybem wykonania.
+Możesz zamknąć kreator przyciskiem Zakończ albo wrócić Wstecz.
 "@
             $btnNext.Text = 'Zakończ'
         }
@@ -618,7 +618,7 @@ $btnBrowseSettings.Add_Click({
 })
 
 $workDownload = {
-    [void]$Sync.Log.Add('Start: pobieranie informacji o obrazie (szkielet)...')
+    [void]$Sync.Log.Add('Start: weryfikacja i pobieranie informacji o obrazie...')
     $Sync.Progress = 10
     try {
         $dl = Join-Path $Root 'download\Get-WindowsImage.ps1'
@@ -661,7 +661,9 @@ $workCustomize = {
             Set-WallpaperSetting -Settings $settings
             Set-ThemeSetting -Settings $settings
             Set-DefaultBrowserSetting -Settings $settings
-            [void]$Sync.Log.Add('Ustawienia (TODO) zalogowane.')
+            Apply-TaskbarSettings -Settings $settings
+            Apply-PrivacySettings -Settings $settings
+            [void]$Sync.Log.Add('Zastosowano konfigurację wyglądu, paska zadań i prywatności.')
             $Sync.Progress = 100
         }
     }

@@ -23,8 +23,9 @@
 - [Struktura katalogów](#-struktura-katalogów)
 - [Wymagania systemowe](#-wymagania-systemowe)
 - [Szybki start](#-szybki-start)
-  - [Opcja A: Kreator graficzny (GUI)](#opcja-a-kreator-graficzny-gui)
-  - [Opcja B: Wiersz poleceń (CLI)](#opcja-b-wiersz-poleceń-cli)
+  - [Opcja A: Kreator graficzny (GUI Windows)](#opcja-a-kreator-graficzny-gui-windows)
+  - [Opcja B: Wiersz poleceń (CLI Windows)](#opcja-b-wiersz-poleceń-cli-windows)
+  - [Opcja C: Nośnik USB z Linuksa / macOS (`konfigurator.sh`)](#opcja-c-nośnik-usb-z-linuksa--macos-konfiguratorsh)
 - [Przewodnik konfiguracji](#-przewodnik-konfiguracji)
   - [Personalizacja systemu (`settings.json`)](#personalizacja-systemu-settingsjson)
   - [Usuwanie aplikacji bloatware (`bloatware.txt`)](#usuwanie-aplikacji-bloatware-bloatwaretxt)
@@ -32,6 +33,7 @@
 - [Parametry skryptu `bootstrap.ps1`](#-parametry-skryptu-bootstrapps1)
 - [Bezpieczeństwo i transparentność](#-bezpieczeństwo-i-transparentność)
 - [Plany rozwojowe (Backlog)](#-plany-rozwojowe-backlog)
+- [Inspiracja](#-inspiracja)
 - [Często zadawane pytania (FAQ)](#-często-zadawane-pytania-faq)
 - [Współtworzenie](#-współtworzenie)
 - [Autor](#-autor)
@@ -101,7 +103,8 @@ flowchart TD
 ```
 konfigurator-win/
 ├── Kreator.cmd                   # Launcher asystenta graficznego (dwuklik w Windows)
-├── bootstrap.ps1                 # Główny orkiestrator CLI całego procesu
+├── bootstrap.ps1                 # Główny orkiestrator CLI całego procesu (Windows)
+├── konfigurator.sh               # Wieloplatformowy kreator nośnika USB (Linux / macOS)
 ├── README.md                     # Dokumentacja główna projektu
 ├── LICENSE                       # Licencja MIT
 ├── CHANGELOG.md                  # Historia wydań i zmian
@@ -109,8 +112,15 @@ konfigurator-win/
 ├── BACKLOG.md                    # Planowane funkcjonalności
 ├── .gitignore                    # Reguły ignorowania plików lokalnych i ISO
 │
+├── .github/workflows/
+│   └── ci.yml                    # Testy ciągłej integracji GitHub Actions (Linux & Windows)
+│
 ├── gui/
 │   └── Start-Kreator.ps1         # Okienkowy kreator krok po kroku (Windows Forms)
+│
+├── unattend/
+│   ├── autounattend.example.xml  # Szablon nienadzorowanej instalacji (bypass TPM/konto lokalne)
+│   └── README.md                 # Przewodnik konfiguracji pliku autounattend
 │
 ├── download/
 │   └── Get-WindowsImage.ps1      # Asystent pobierania oficjalnych nośników ISO i MCT
@@ -130,10 +140,16 @@ konfigurator-win/
 
 ## 💻 Wymagania systemowe
 
+### Na docelowym komputerze Windows (Target):
 - **System operacyjny**: Windows 10 (od wersji 1809) lub Windows 11 (zalecany).
 - **PowerShell**: Wbudowany PowerShell 5.1 lub nowszy [PowerShell 7+](https://github.com/PowerShell/PowerShell).
 - **Uprawnienia**: Uprawnienia Administratora (wymagane do usuwania pakietów aprowizowanych oraz instalacji systemowych przez winget).
 - **Połączenie sieciowe**: Wymagane do pobierania aplikacji przez menedżer winget.
+
+### Do przygotowania nośnika USB na Linuksie / macOS (Host):
+- **Powłoka**: `bash` / `zsh` (standardowo dostępna w każdym systemie).
+- **Narzędzia**: `curl`, `rsync`, `7z` (p7zip) lub uprawnienia montowania loop.
+- **Dla obrazów ISO z plikiem `install.wim` > 4 GB**: pakiet `wimtools` (Linux: `sudo apt install wimtools`) lub `wimlib` (macOS: `brew install wimlib`).
 
 ---
 
@@ -150,7 +166,7 @@ cd konfigurator-win
 
 ---
 
-### Opcja A: Kreator graficzny (GUI)
+### Opcja A: Kreator graficzny (GUI Windows)
 
 Najprostszy sposób dla użytkowników domowych i techników:
 1. Kliknij dwukrotnie plik **`Kreator.cmd`** (lub uruchom go jako Administrator).
@@ -159,7 +175,7 @@ Najprostszy sposób dla użytkowników domowych i techników:
 
 ---
 
-### Opcja B: Wiersz poleceń (CLI)
+### Opcja B: Wiersz poleceń (CLI Windows)
 
 Dla administratorów automatyzujących przygotowanie maszyn:
 
@@ -178,6 +194,25 @@ Dla administratorów automatyzujących przygotowanie maszyn:
    ```powershell
    .\bootstrap.ps1 -WhatIf:$false -RestartExplorer
    ```
+
+---
+
+### Opcja C: Nośnik USB z Linuksa / macOS (`konfigurator.sh`)
+
+Dla serwisantów i administratorów przygotowujących bootowalny pendrive z poziomu Linuksa lub Maca:
+
+1. Nadaj uprawnienia wykonywalności i uruchom asystenta:
+   ```bash
+   chmod +x ./konfigurator.sh
+   ./konfigurator.sh
+   ```
+
+2. W menu wybierz opcję `[4]`, aby przygotować pendrive:
+   - Skrypt bezpiecznie wykrywa podłączone nośniki USB (chroniąc dyski systemowe przed skasowaniem).
+   - Formatuje pendrive w standardzie UEFI (FAT32).
+   - Dzieli pliki `install.wim` > 4 GB na części `.swm` za pomocą `wimlib-imagex`.
+   - Automatycznie kopiuje plik `autounattend.xml` (omijający TPM 2.0 i wymóg konta Microsoft).
+   - Umieszcza katalog projektu `konfigurator-win` na nośniku USB, gotowy do uruchomienia po instalacji.
 
 ---
 
@@ -263,8 +298,18 @@ Plik `install/apps.json` definiuje listę oprogramowania instalowanego przez men
 ## 🗺️ Plany rozwojowe (Backlog)
 
 Szczegółowy wykaz planowanych funkcji znajduje się w pliku [BACKLOG.md](BACKLOG.md).
-Kluczowym kolejnym kamieniem milowym projektu jest:
-- **Wieloplatformowy kreator bootowalnego pendrive'a USB** działający w środowiskach Windows, Linux oraz macOS, automatycznie dogrywający konfigurator na instalowany nośnik.
+- [x] **Wieloplatformowy kreator bootowalnego pendrive'a USB (`konfigurator.sh`)** dla systemów Linux i macOS z obsługą UEFI FAT32 i podziałem plików WIM > 4 GB.
+- [x] **Szablon instalacji nienadzorowanej `autounattend.xml`** z obejściem TPM 2.0 / Secure Boot dla laptopów poleasingowych i kontem lokalnym.
+- [ ] **Kreator USB dla Windows** (natywne formatowanie USB z poziomu PowerShell / GUI).
+- [ ] **Zaawansowane testy integracyjne maszyn wirtualnych** (zautomatyzowany test instalacji Windows w QEMU/Hyper-V).
+
+---
+
+## 🔗 Inspiracja
+
+Pomysł na ten projekt wziął się z narzędzia [WinUtil od Chris Titus Tech](https://github.com/ChrisTitusTech/winutil). Dziękuję autorowi za jego pracę.
+
+Przy nienadzorowanej instalacji Windows 10/11 przydatny jest też [generator autounattend.xml Christopha Schneegansa](https://schneegans.de/windows/unattend-generator/). Tworzy plik odpowiedzi z lokalnym kontem bez konta Microsoft, obejściem TPM i Secure Boot, usuwaniem bloatware oraz skryptami po instalacji.
 
 ---
 

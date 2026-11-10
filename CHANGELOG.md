@@ -3,6 +3,32 @@
 Wszystkie istotne zmiany w projekcie **konfigurator-win** są dokumentowane w tym pliku.
 Format bazuje na wytycznych [Keep a Changelog](https://keepachangelog.com/pl/1.0.0/), a wersjonowanie odpowiada [Semantic Versioning](https://semver.org/lang/pl/).
 
+## [1.1.0] - 2026-11-10
+
+### Dodano
+- **Wieloplatformowy kreator nośnika USB `konfigurator.sh` (Linux / macOS)**:
+  - Czysty Bash / Zsh bez wymagania instalacji PowerShell Core na maszynie hosta.
+  - Wykrywanie i bezpieczne listowanie podłączonych pamięci USB (`lsblk` na Linux, `diskutil` na macOS) z ochroną dysków wewnętrznych.
+  - Automatyczne formatowanie w standardzie UEFI FAT32 (`WININSTALL`).
+  - Dzielenie obrazów `install.wim` przekraczających 4 GB na partycji FAT32 za pomocą `wimlib-imagex` na części `.swm` (3800 MB).
+  - Automatyczne wstrzykiwanie pliku `autounattend.xml` i katalogu `konfigurator-win` na nośnik.
+  - Opcje wiersza poleceń: `--verify`, `--list-usb`, `--check-tools`, `--dry-run`.
+- **Moduł instalacji nienadzorowanej `unattend/`**:
+  - Szablon `autounattend.example.xml` z obejściem wymagań sprzętowych Windows 11 (`LabConfig`: TPM 2.0, Secure Boot, RAM, CPU).
+  - Obejście wymuszonego logowania do konta Microsoft Online i utworzenie lokalnego administratora.
+  - Przewodnik `unattend/README.md` oraz odnośnik do generatora Schneegans.
+- **Workflow CI GitHub Actions (`.github/workflows/ci.yml`)**:
+  - Automatyczna weryfikacja składni plików `.ps1` (AST Parser) i `.sh` (`bash -n`).
+  - Testowe wykonanie `bootstrap.ps1 -WhatIf -SkipDownload` na platformach Ubuntu oraz Windows.
+- **Sekcja inspiracji**:
+  - Podziękowania i odnośniki w `README.md` do projektów WinUtil (Chris Titus Tech) oraz Schneegans Unattend Generator.
+
+### Poprawiono
+- **Kreator graficzny `gui/Start-Kreator.ps1`**:
+  - Uzupełniono brakujące wywołania `Apply-TaskbarSettings` oraz `Apply-PrivacySettings` w wątku personalizacji.
+  - Zaktualizowano przestarzały tekst na ekranie podsumowania (usunięto nieaktualne oznaczenie "TODO").
+  - Zaktualizowano komunikaty logowania procesu pobierania nośnika.
+
 ## [1.0.0] - 2026-11-09
 
 ### Dodano

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-and-test:
+    name: Lint & Dry-Run (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate PowerShell Scripts Syntax
+        shell: pwsh
+        run: |
+          $errors = @()
+          Get-ChildItem -Recurse -Filter *.ps1 | ForEach-Object {
+              $parseErrors = $null
+              [void][System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$parseErrors)
+              if ($parseErrors.Count -gt 0) {
+                  Write-Host "::error file=$($_.FullName)::Błędy składni w $($_.Name)"
+                  $parseErrors | ForEach-Object { Write-Host "  $($_)" }
+                  $errors += $parseErrors
+              } else {
+                  Write-Host "OK: $($_.FullName)"
+              }
+          }
+          if ($errors.Count -gt 0) {
+              exit 1
+          }
+
+      - name: Validate Shell Scripts Syntax
+        if: runner.os == 'Linux'
+        run: |
+          find . -name "*.sh" -type f -exec bash -n {} +
+          echo "Wszystkie skrypty powłoki .sh mają poprawną składnię."
+
+      - name: Test bootstrap.ps1 in Dry-Run (-WhatIf)
+        shell: pwsh
+        run: |
+          ./bootstrap.ps1 -SkipDownload

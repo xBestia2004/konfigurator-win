@@ -1,22 +1,34 @@
 # Backlog konfigurator-win
 
-Lista funkcji planowanych na przyszłość. Pozycje z tej listy nie są jeszcze zrobione.
+Lista funkcji zrealizowanych oraz planowanych na przyszłość.
 
-## Następny priorytet
+## Zrealizowane w wersji 1.1.0
 
-Po zakończeniu obecnej pracy nad częścią dla Windows następnym zadaniem jest tworzenie bootowalnego pendrive'a, uruchamiane z Windows, Linuksa i macOS.
+- [x] **Wieloplatformowy kreator bootowalnego pendrive'a USB (`konfigurator.sh`)**:
+  - Działa natywnie na systemach Linux i macOS (czysty Bash, bez wymogu PowerShell Core).
+  - Bezpieczne wykrywanie podłączonych pendrive'ów USB (ochrona dysków wewnętrznych NVMe/SATA).
+  - Formatowanie nośnika w standardzie UEFI FAT32 z etykietą `WININSTALL`.
+  - Obsługa obrazów z plikiem `install.wim` > 4 GB poprzez automatyczny podział na pliki `.swm` (3800 MB) za pomocą `wimlib-imagex`.
+  - Automatyczne wstrzykiwanie pliku `autounattend.xml` oraz katalogu `konfigurator-win` na przygotowany nośnik.
+- [x] **Szablon nienadzorowanej instalacji Windows (`unattend/autounattend.example.xml`)**:
+  - Obejście wymagań sprzętowych Windows 11 (TPM 2.0, Secure Boot, RAM, CPU) pod laptopy poleasingowe.
+  - Pominięcie wymogu konta Microsoft Online i automatyczne utworzenie konta lokalnego.
+  - Automatyczna akceptacja EULA i wyłączenie natrętnych pytań telemetrycznych OOBE.
+- [x] **Infrastruktura CI**:
+  - Workflow GitHub Actions (`.github/workflows/ci.yml`) weryfikujący poprawność składni PowerShell oraz skryptów powłoki na runnerach Ubuntu i Windows.
 
-## Planowane
+## Planowane na kolejne wydania
 
-### Tworzenie bootowalnego pendrive'a
+### 1. Kreator USB dla środowiska Windows
+- Status: planowane.
+- Dodanie modułu w PowerShell (`download/New-WindowsUsb.ps1` lub wbudowanie w `Kreator.cmd` / GUI), który pozwoli przygotować bootowalny pendrive USB bezpośrednio z poziomu Windows bez zewnętrznych narzędzi (np. Rufus).
+- Wykorzystanie natywnych poleceń `Get-Disk`, `Clear-Disk`, `New-Partition`, `Format-Volume` oraz `dism /Split-Image`.
 
-Status: planowane, nierozpoczęte.
+### 2. Testy na maszynie wirtualnej (VM)
+- Status: w trakcie przygotowania.
+- Przetestowanie pliku `autounattend.xml` w środowisku wirtualnym (np. VirtualBox, VMware, QEMU lub Hyper-V).
+- Weryfikacja bezbłędnego przejścia fazy instalacji bez interwencji użytkownika aż do pulpitu z kontem lokalnym.
 
-Narzędzie ma działać na Windows, Linuksie i macOS. Po podłączeniu pendrive'a zapisze na nim bootowalny nośnik z obrazem Windows i konfiguracją projektu, czyli listą bloatware, plikiem ustawień i listą aplikacji, tak żeby po instalacji systemu dało się od razu uruchomić konfigurator.
-
-Do ustalenia przed rozpoczęciem pracy:
-
-* wykrywanie podłączonego pendrive'a i potwierdzenie przed wyczyszczeniem danych,
-* sposób zapisu obrazu na Windows i na macOS,
-* obsługa obrazów większych niż 4 GB na FAT32,
-* miejsce na nośniku, w którym zostanie zapisana konfiguracja projektu.
+### 3. Lekki interfejs okienkowy dla Linuksa (opcjonalnie)
+- Status: pomysł / do analizy.
+- Możliwość uruchomienia graficznego okna wyboru pendrive'a za pomocą `zenity` lub `dialog`/`whiptail`, jeśli są obecne w systemie.
