@@ -1,16 +1,16 @@
 # konfigurator-win
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Wersja-1.0.0-blue.svg?style=for-the-badge" alt="Wersja">
+  <img src="https://img.shields.io/badge/Wersja-1.1.0-blue.svg?style=for-the-badge" alt="Wersja">
   <img src="https://img.shields.io/badge/PowerShell-5.1%20%7C%207%2B-blueviolet?style=for-the-badge&logo=powershell" alt="PowerShell">
   <img src="https://img.shields.io/badge/System-Windows%2010%20%7C%2011-0078D6?style=for-the-badge&logo=windows" alt="Platforma">
-  <img src="https://img.shields.io/badge/Interfejs-CLI%20%2B%20GUI-orange?style=for-the-badge" alt="Interfejs">
-  <img src="https://img.shields.io/badge/Licencja-MIT-green.svg?style=for-the-badge" alt="Licencja">
-  <img src="https://img.shields.io/badge/Status-Aktywny%20v1.0.0-success.svg?style=for-the-badge" alt="Status">
+  <img src="https://img.shields.io/badge/Interfejs-CLI%20%2B%20GUI%20%2B%20Bash-orange?style=for-the-badge" alt="Interfejs">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/Licencja-MIT-green.svg?style=for-the-badge" alt="Licencja"></a>
+  <a href="https://github.com/xBestia2004/konfigurator-win/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/xBestia2004/konfigurator-win/ci.yml?branch=main&style=for-the-badge&label=CI" alt="CI"></a>
 </p>
 
 <p align="center">
-  <b>Profesjonalny zestaw narzędzi PowerShell oraz interfejs graficzny do kompleksowej automatyzacji, personalizacji oraz debloatu świeżo zainstalowanego systemu Windows 10 i 11.</b>
+  <b>Zestaw narzędzi PowerShell (oraz kreator nośnika w Bashu) do pobrania, dostosowania, debloatu i wyposażenia świeżo zainstalowanego systemu Windows 10 i 11.</b>
 </p>
 
 ---
@@ -45,9 +45,10 @@
 
 **konfigurator-win** powstał w celu skrócenia czasu wdrożenia i konfiguracji systemu operacyjnego Windows na stacjach roboczych i komputerach prywatnych. Narzędzie łączy w sobie pobieranie oficjalnych nośników, czyszczenie systemu z niechcianych aplikacji OEM/Microsoftu, optymalizację ustawień interfejsu oraz cichą instalację niezbędnego oprogramowania.
 
-Projekt oferuje dwa równorzędne sposoby obsługi:
+Projekt oferuje trzy sposoby obsługi:
 1. **Tryb graficzny (Kreator GUI)** – okienkowy asystent krok po kroku (`Kreator.cmd`), idealny do szybkiej pracy bez konieczności edycji plików tekstowych.
 2. **Tryb wsadowy / CLI (`bootstrap.ps1`)** – w pełni skryptowalne, powtarzalne środowisko automatyzacji dla administratorów i techników IT.
+3. **Kreator nośnika USB (`konfigurator.sh`)** – przygotowanie bootowalnego pendrive'a z Linuksa lub macOS (UEFI/FAT32, opcjonalny `autounattend.xml`).
 
 W przeciwieństwie do wielu nieprzejrzystych skryptów dostępnych w sieci:
 - **Domyślnie działa w trybie podglądu (`-WhatIf` / Dry-Run)**: nie wprowadzi żadnych zmian bez Twojej wyraźnej decyzji.
@@ -347,10 +348,11 @@ Sprawdź plik [CONTRIBUTING.md](CONTRIBUTING.md) i wyślij swój Pull Request!
 
 ## 👤 Autor
 
-**Dariusz Kisiel**  
-- Technik Informatyk, Lublin  
+**Dariusz Kisiel** (BlackWolfHacker)  
+- Technik informatyk, Lublin  
 - Profil GitHub: [@xBestia2004](https://github.com/xBestia2004)  
-- E-mail: `dariuszkisiel2004@int.pl`
+- Portfolio: [dariuszkisiel.pl](https://dariuszkisiel.pl/)  
+- E-mail: [dariuszkisiel@wilczysprzet.pl](mailto:dariuszkisiel@wilczysprzet.pl)
 
 ---
 
